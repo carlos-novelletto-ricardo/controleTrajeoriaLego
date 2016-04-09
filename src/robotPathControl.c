@@ -87,15 +87,27 @@ void setRobotOrientaion(unsigned int in_orientation){
 					break;
 	case 0:   {
 
-				if(EV3.latsOrientation!=0)
-					actionList[actionListIndex++]=turnleft;
+				if(EV3.latsOrientation!=0){
+					if(EV3.latsOrientation==270)
+						actionList[actionListIndex++]=turnleft;
+					else if(EV3.latsOrientation==90)
+						actionList[actionListIndex++]=turnright;
+
+
+				}
 				actionList[actionListIndex++]=fwdMove;
 				EV3.orientation=0;
 				break;
 	}
 	case 180: {
-				if(EV3.latsOrientation!=180)
-					actionList[actionListIndex++]=turnright;
+				if(EV3.latsOrientation!=180){
+
+					if(EV3.latsOrientation==270)
+						actionList[actionListIndex++]=turnright;
+					else if(EV3.latsOrientation==90)
+						actionList[actionListIndex++]=turnleft;
+
+				}
 				actionList[actionListIndex++]=fwdMove;
 				EV3.orientation=180;
 
@@ -517,10 +529,10 @@ int main(void) {
 	EV3.latsOrientation=90;
 	EV3.orientation=90;
 	setPossibleInitActions();
-	setStartPoint(1);
-	setEndPoint(3);
-	setObstacle(o8);
-	setObstacle(o5);
+	setStartPoint(3);
+	setEndPoint(1);
+	//setObstacle(o8);
+//	setObstacle(o5);
 	calculatePathVector();
 	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
 	return EXIT_SUCCESS;
