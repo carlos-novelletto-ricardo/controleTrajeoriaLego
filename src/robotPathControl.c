@@ -14,6 +14,8 @@
 
 #define byte8   int
 
+byte8 Nextcooredenate[2];
+byte8 lastCoordenate[2];
 byte8 currentCoordenate[2];
 byte8 endCoordenate[2];
 byte8 initCoordenate[2];
@@ -24,6 +26,8 @@ byte8 detectecObstacles[3][3];
 
 char *actionList[40];
 int actionListIndex=0;
+
+int lastMoviment=0;
 
 char fwdMove[]="Moveu paraFrente";
 char leftMove[]="Moveu Esquerda";
@@ -71,6 +75,11 @@ struct robot {
 
 }EV3;
 
+
+
+
+
+
 void setRobotOrientaion(unsigned int in_orientation){
 
 	switch(in_orientation){
@@ -88,12 +97,20 @@ void setRobotOrientaion(unsigned int in_orientation){
 	case 0:   {
 
 				if(EV3.latsOrientation!=0){
-					if(EV3.latsOrientation==270)
+					if(EV3.latsOrientation==270){
 						actionList[actionListIndex++]=turnleft;
-					else if(EV3.latsOrientation==90)
+						Nextcooredenate[1]+=1;
+					}
+					else if(EV3.latsOrientation==90){
 						actionList[actionListIndex++]=turnright;
-
-
+						Nextcooredenate[1]+=1;
+					}
+					else if(EV3.latsOrientation==180){
+						actionList[actionListIndex++]=turnleft;
+						Nextcooredenate[0]-=1;
+					}
+				}else{
+					Nextcooredenate[1]+=1;
 				}
 				actionList[actionListIndex++]=fwdMove;
 				EV3.orientation=0;
@@ -102,10 +119,14 @@ void setRobotOrientaion(unsigned int in_orientation){
 	case 180: {
 				if(EV3.latsOrientation!=180){
 
-					if(EV3.latsOrientation==270)
+					if(EV3.latsOrientation==270){
 						actionList[actionListIndex++]=turnright;
-					else if(EV3.latsOrientation==90)
+						Nextcooredenate[1]-=1;
+					}
+					else if(EV3.latsOrientation==90){
 						actionList[actionListIndex++]=turnleft;
+						Nextcooredenate[1]+=1;
+					}
 
 				}
 				actionList[actionListIndex++]=fwdMove;
@@ -116,8 +137,16 @@ void setRobotOrientaion(unsigned int in_orientation){
 
 	case 270: {
 
-		if(EV3.latsOrientation!=270)
+		if(EV3.latsOrientation==180){
+		actionList[actionListIndex++]=turnleft;
+
+		}
+		else if(EV3.latsOrientation==0){
+		actionList[actionListIndex++]=turnright;
+		}
+		else if(EV3.latsOrientation!=270){
 			actionList[actionListIndex++]=turn180;
+		}
 		actionList[actionListIndex++]=fwdMove;
 		EV3.orientation=270;
 		break;
@@ -125,8 +154,9 @@ void setRobotOrientaion(unsigned int in_orientation){
 	case 360: {
 
 				actionList[actionListIndex++]=turn180;
-				actionList[actionListIndex++]=turn180;
-				EV3.netxMov=moveFpward;
+				actionList[actionListIndex++]=fwdMove;
+				EV3.orientation=270;
+
 				break;
 			}
 	}
@@ -284,6 +314,22 @@ void setPossibleInitActions(void){
 
 }
 
+void clearPossibleActions(struct pointAction *pAction, unsigned int possibleAction){
+
+	int j;
+
+	for(j=0;j<4;j++){
+
+
+		if(pAction->possibleActions[j]==possibleAction) {
+			pAction->possibleActions[j]=noneAction;
+
+		}
+	}
+
+}
+
+
 struct pointAction *getPossiPointActions( byte8 *pointCoordenate){
 
 	return PointActions.point[ pointCoordenate[0] ][ pointCoordenate[1]].possibleActions;
@@ -295,7 +341,7 @@ void calculatePathVector(){
 
 	float *moduleFoward,*moduleRight,*moduleLeft,*moduleDown, *minModulep;
 	float modules[4],minModule;
-	byte8 Nextcooredenate[2];
+
 	byte8 terminationConditon;
 	Nextcooredenate[0]=currentCoordenate[0];
 	Nextcooredenate[1]=currentCoordenate[1];
@@ -323,63 +369,6 @@ void calculatePathVector(){
 		pAction=getPossiPointActions(currentCoordenate);
 
 
-		for(j=0;j<4;j++){
-
-					switch (pAction->possibleActions[j]){
-
-						case moveFpward : {
-
-										byte8  nextCoordate[2];
-
-										nextCoordate[0]=currentCoordenate[0]+1;
-										nextCoordate[1]=currentCoordenate[1];
-										if(getObstacle(nextCoordate)!=0){
-											pAction->possibleActions[j]=noneAction;
-
-										}
-										break;
-
-									}
-						case MoveDown : {
-
-										byte8  nextCoordate[2];
-
-										nextCoordate[0]=currentCoordenate[0]-1;
-										nextCoordate[1]=currentCoordenate[1];
-										if(getObstacle(nextCoordate)!=0){
-											pAction->possibleActions[j]=noneAction;
-
-										}
-										break;
-
-									}
-						case right : {
-										byte8  nextCoordate[2];
-
-										nextCoordate[0]=currentCoordenate[0];
-										nextCoordate[1]=currentCoordenate[1]+1;
-										if(getObstacle(nextCoordate)!=0){
-											pAction->possibleActions[j]=noneAction;
-
-										}
-										break;
-									}
-						case left : {
-										byte8  nextCoordate[2];
-
-										nextCoordate[0]=currentCoordenate[0];
-										nextCoordate[1]=currentCoordenate[1]-1;
-										if(getObstacle(nextCoordate)!=0){
-											pAction->possibleActions[j]=noneAction;
-
-										}
-										break;
-
-									}
-						case noneAction :  break;
-						default : break;
-					}
-				}
 
 			modules[0]=1000;
 			modules[1]=1000;
@@ -455,33 +444,157 @@ void calculatePathVector(){
 
 		}
 
-		if(minModule==(*moduleFoward)){
-			Nextcooredenate[0]+=1;
-			 setRobotOrientaion(90);
-		    //actionList[actionListIndex++]=fwdMove;
+		if(minModule<1000){
+				if(minModule==(*moduleFoward)){
+					Nextcooredenate[0]+=1;
+					 setRobotOrientaion(90);
+					 pAction=getPossiPointActions(Nextcooredenate);
+					 clearPossibleActions(pAction,MoveDown);
+					 EV3.lastxMov=moveFpward;
+					//actionList[actionListIndex++]=fwdMove;
+
+				}
+				else if(minModule==(*moduleRight)){
+
+					setRobotOrientaion(0);
+					pAction=getPossiPointActions(Nextcooredenate);
+					clearPossibleActions(pAction,left);
+					EV3.lastxMov=right;
+					//actionList[actionListIndex++]=rightMove;
+				}
+				else if(minModule==(*moduleLeft)){
+					setRobotOrientaion(180);
+					pAction=getPossiPointActions(Nextcooredenate);
+					clearPossibleActions(pAction,right);
+					EV3.lastxMov=left;
+					//actionList[actionListIndex++]=leftMove;
+				}
+				else if(minModule==(*moduleDown)){
+					Nextcooredenate[0]-=1;
+					setRobotOrientaion(270);
+					pAction=getPossiPointActions(Nextcooredenate);
+					clearPossibleActions(pAction,moveFpward);
+					EV3.lastxMov=MoveDown;
+					//actionList[actionListIndex++]=downMove;
+				}
+
+				//read sensor
 
 		}
-		else if(minModule==(*moduleRight)){
-			Nextcooredenate[1]+=1;
-			setRobotOrientaion(0);
-			//actionList[actionListIndex++]=rightMove;
+		else{
+
+			setPossibleInitActions();
+			if(EV3.lastxMov==moveFpward){
+					pAction=getPossiPointActions(currentCoordenate);
+					clearPossibleActions(pAction,moveFpward);
+			}
+			else if(EV3.lastxMov==right){
+
+					pAction=getPossiPointActions(currentCoordenate);
+					clearPossibleActions(pAction,right);
+
+
+			}
+			else if(EV3.lastxMov==left){
+
+					 pAction=getPossiPointActions(currentCoordenate);
+				     clearPossibleActions(pAction,left);
+
+
+			}
+			else if(EV3.lastxMov==MoveDown){
+					 pAction=getPossiPointActions(currentCoordenate);
+					clearPossibleActions(pAction,MoveDown);
+
+			}
+
 		}
-		else if(minModule==(*moduleLeft)){
-			Nextcooredenate[1]-=1;
-			setRobotOrientaion(180);
-		    //actionList[actionListIndex++]=leftMove;
-		}
-		else if(minModule==(*moduleDown)){
-			Nextcooredenate[0]-=1;
-			setRobotOrientaion(270);
-			//actionList[actionListIndex++]=downMove;
+				if(getObstacle(Nextcooredenate)!=0){
+
+						setRobotOrientaion(360);
+						Nextcooredenate[0]=currentCoordenate[0];
+						Nextcooredenate[1]=currentCoordenate[1];
+
+						if(minModule==(*moduleFoward)){
+										 pAction=getPossiPointActions(currentCoordenate);
+										 clearPossibleActions(pAction,moveFpward);
+										 EV3.latsOrientation=270;
+						}
+						else if(minModule==(*moduleRight)){
+
+										 pAction=getPossiPointActions(currentCoordenate);
+										 clearPossibleActions(pAction,right);
+										 EV3.latsOrientation=180;
+
+									}
+						else if(minModule==(*moduleLeft)){
+
+										 pAction=getPossiPointActions(currentCoordenate);
+										 clearPossibleActions(pAction,left);
+										 EV3.latsOrientation=0;
+
+									}
+									else if(minModule==(*moduleDown)){
+										 pAction=getPossiPointActions(currentCoordenate);
+										clearPossibleActions(pAction,MoveDown);
+										EV3.latsOrientation=0;
+
+									}
+
+					/*	if(minModule==(*moduleFoward)){
+							Nextcooredenate[0]-=1;
+						//	 setRobotOrientaion(270);
+							 pAction=getPossiPointActions(Nextcooredenate);
+							 clearPossibleActions(pAction,moveFpward);
+							 EV3.latsOrientation=270;
+							//actionList[actionListIndex++]=fwdMove;
+
+						}
+						else if(minModule==(*moduleRight)){
+						//	Nextcooredenate[1]-=1;
+						//	setRobotOrientaion(180);
+							 pAction=getPossiPointActions(Nextcooredenate);
+							 clearPossibleActions(pAction,right);
+							 EV3.latsOrientation=180;
+
+							//actionList[actionListIndex++]=rightMove;
+						}
+						else if(minModule==(*moduleLeft)){
+							//Nextcooredenate[1]+=1;
+						//	setRobotOrientaion(0);
+							 pAction=getPossiPointActions(Nextcooredenate);
+							 clearPossibleActions(pAction,left);
+							 EV3.latsOrientation=0;
+							//actionList[actionListIndex++]=leftMove;
+						}
+						else if(minModule==(*moduleDown)){
+							Nextcooredenate[0]+=1;
+						//	setRobotOrientaion(90);
+							 pAction=getPossiPointActions(Nextcooredenate);
+							clearPossibleActions(pAction,MoveDown);
+							EV3.latsOrientation=0;
+							//actionList[actionListIndex++]=downMove;
+						}
+
+		*/
+
+
 		}
 
-		//read sensor
+		 static int position=2;
+		 static int obstacles=2;
+		currentPosition[Nextcooredenate[0]][Nextcooredenate[1]]=position++;
+
+		lastCoordenate[0]=currentCoordenate[0];
+		lastCoordenate[1]=currentCoordenate[1];
+
+		 currentCoordenate[0]=Nextcooredenate[0];
+		 currentCoordenate[1]=Nextcooredenate[1];
+
 		//found obstacle
 		//recalculate trajectory
 
-		float Y,X,Y2,X2,Multiplication1,Multiplication2,newModule1,newModule2;
+	/*	float Y,X,Y2,X2,Multiplication1,Multiplication2,newModule1,newModule2;
 			Y= endCoordenate[0]- (Nextcooredenate[0] );
 			X= endCoordenate[1]- (Nextcooredenate[1]);
 
@@ -509,7 +622,7 @@ void calculatePathVector(){
 					 currentCoordenate[0]=Nextcooredenate[0];
 					 currentCoordenate[1]=Nextcooredenate[1];
 
-			 }
+			 }*/
 
 		ttt=0;
 
@@ -528,12 +641,52 @@ void calculatePathVector(){
 int main(void) {
 	EV3.latsOrientation=90;
 	EV3.orientation=90;
+
+	lastCoordenate[0]=99;
+	lastCoordenate[1]=99;
+
 	setPossibleInitActions();
 	setStartPoint(3);
 	setEndPoint(1);
-	//setObstacle(o8);
-//	setObstacle(o5);
+	setObstacle(o6);
+	setObstacle(o5);
 	calculatePathVector();
 	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
 	return EXIT_SUCCESS;
 }
+
+/*
+ *
+ *
+ * 	setStartPoint(1);
+	setEndPoint(3);
+	setObstacle(o8);
+	setObstacle(o5);
+ *
+  * 	setStartPoint(1);
+	setEndPoint(3);
+	setObstacle(o8);
+	setObstacle(o5);
+
+
+		setStartPoint(3);
+	setEndPoint(3);
+	setObstacle(o6);
+	setObstacle(o5);
+
+	setStartPoint(1);
+	setEndPoint(3);
+	setObstacle(o6);
+	setObstacle(o5);
+
+
+		setPossibleInitActions();
+	setStartPoint(3);
+	setEndPoint(1);
+	setObstacle(o6);
+	setObstacle(o5);
+
+
+
+ * */
+
