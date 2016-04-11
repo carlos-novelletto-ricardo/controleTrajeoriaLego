@@ -99,18 +99,18 @@ void setRobotOrientaion(unsigned int in_orientation){
 				if(EV3.latsOrientation!=0){
 					if(EV3.latsOrientation==270){
 						actionList[actionListIndex++]=turnleft;
-						Nextcooredenate[1]+=1;
+					//	Nextcooredenate[1]+=1;
 					}
 					else if(EV3.latsOrientation==90){
 						actionList[actionListIndex++]=turnright;
-						Nextcooredenate[1]+=1;
+				//		Nextcooredenate[1]+=1;
 					}
 					else if(EV3.latsOrientation==180){
 						actionList[actionListIndex++]=turnleft;
-						Nextcooredenate[0]-=1;
+					//	Nextcooredenate[0]-=1;
 					}
 				}else{
-					Nextcooredenate[1]+=1;
+					//Nextcooredenate[1]+=1;
 				}
 				actionList[actionListIndex++]=fwdMove;
 				EV3.orientation=0;
@@ -121,13 +121,16 @@ void setRobotOrientaion(unsigned int in_orientation){
 
 					if(EV3.latsOrientation==270){
 						actionList[actionListIndex++]=turnright;
-						Nextcooredenate[1]-=1;
+					//	Nextcooredenate[1]-=1;
 					}
 					else if(EV3.latsOrientation==90){
 						actionList[actionListIndex++]=turnleft;
-						Nextcooredenate[1]+=1;
+					//	Nextcooredenate[1]-=1;
 					}
 
+				}
+				else {
+					//Nextcooredenate[1]-=1;
 				}
 				actionList[actionListIndex++]=fwdMove;
 				EV3.orientation=180;
@@ -446,7 +449,7 @@ void calculatePathVector(){
 
 		if(minModule<1000){
 				if(minModule==(*moduleFoward)){
-					Nextcooredenate[0]+=1;
+					 Nextcooredenate[0]+=1;
 					 setRobotOrientaion(90);
 					 pAction=getPossiPointActions(Nextcooredenate);
 					 clearPossibleActions(pAction,MoveDown);
@@ -456,6 +459,7 @@ void calculatePathVector(){
 				}
 				else if(minModule==(*moduleRight)){
 
+					Nextcooredenate[1]+=1;
 					setRobotOrientaion(0);
 					pAction=getPossiPointActions(Nextcooredenate);
 					clearPossibleActions(pAction,left);
@@ -463,6 +467,7 @@ void calculatePathVector(){
 					//actionList[actionListIndex++]=rightMove;
 				}
 				else if(minModule==(*moduleLeft)){
+					Nextcooredenate[1]-=1;
 					setRobotOrientaion(180);
 					pAction=getPossiPointActions(Nextcooredenate);
 					clearPossibleActions(pAction,right);
@@ -647,7 +652,7 @@ int main(void) {
 
 	setPossibleInitActions();
 	setStartPoint(3);
-	setEndPoint(1);
+	setEndPoint(3);
 	setObstacle(o6);
 	setObstacle(o5);
 	calculatePathVector();
@@ -657,35 +662,39 @@ int main(void) {
 
 /*
  *
+ *	setStartPoint(3); ok
+	setEndPoint(1);
+	setObstacle(o8);
+	setObstacle(o5);
  *
- * 	setStartPoint(1);
+ * 	setStartPoint(1);ok
 	setEndPoint(3);
 	setObstacle(o8);
 	setObstacle(o5);
  *
-  * 	setStartPoint(1);
-	setEndPoint(3);
-	setObstacle(o8);
-	setObstacle(o5);
 
 
-		setStartPoint(3);
-	setEndPoint(3);
+	setStartPoint(3);
+	setEndPoint(3); ok
 	setObstacle(o6);
 	setObstacle(o5);
 
 	setStartPoint(1);
-	setEndPoint(3);
+	setEndPoint(3); ok
 	setObstacle(o6);
 	setObstacle(o5);
 
 
-		setPossibleInitActions();
-	setStartPoint(3);
+	setPossibleInitActions();
+	setStartPoint(3); ok
 	setEndPoint(1);
 	setObstacle(o6);
 	setObstacle(o5);
 
+	setStartPoint(3);
+	setEndPoint(1); ok
+	setObstacle(04);
+	setObstacle(o5);
 
 
  * */
