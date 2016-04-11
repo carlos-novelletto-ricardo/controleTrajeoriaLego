@@ -228,9 +228,12 @@ byte8 getTrajectiry(byte8 *in_coordenate){
 void setStartPoint(byte8 in_startPoint){
 
 	switch(in_startPoint){
-		case 1: 	currentPosition[0][0]=1; 	currentCoordenate[0]=0; currentCoordenate[1]=0; initCoordenate[0]=0; initCoordenate[0]=1; break;
+		case 1: 	currentPosition[0][0]=1; 	currentCoordenate[0]=0; currentCoordenate[1]=0; initCoordenate[0]=0; initCoordenate[0]=0; break;
 		case 2: 	currentPosition[0][1]=1;  	currentCoordenate[0]=0; currentCoordenate[1]=1; initCoordenate[0]=0; initCoordenate[1]=1; break;
-		case 3: 	currentPosition[0][2]=1;  	currentCoordenate[0]=0; currentCoordenate[1]=2; initCoordenate[0]=0; initCoordenate[2]=1; break;
+		case 3: 	currentPosition[0][2]=1;  	currentCoordenate[0]=0; currentCoordenate[1]=2; initCoordenate[0]=0; initCoordenate[2]=2; break;
+		case 4: 	currentPosition[2][0]=1; 	currentCoordenate[0]=2; currentCoordenate[1]=0; initCoordenate[0]=2; initCoordenate[0]=0; break;
+		case 5: 	currentPosition[2][1]=1;  	currentCoordenate[0]=2; currentCoordenate[1]=1; initCoordenate[0]=2; initCoordenate[1]=1; break;
+		case 6: 	currentPosition[2][2]=1;  	currentCoordenate[0]=2; currentCoordenate[1]=2; initCoordenate[0]=2; initCoordenate[2]=2; break;
 	}
 }
 
@@ -240,6 +243,9 @@ void setEndPoint(byte8 in_endPoint){
 		case 1: 	{currentPosition[2][0]=endPoint; endCoordenate[0]=2; endCoordenate[1]=0; break;}
 		case 2: 	{currentPosition[2][1]=endPoint; endCoordenate[0]=2; endCoordenate[1]=1; break;}
 		case 3: 	{currentPosition[2][2]=endPoint; endCoordenate[0]=2; endCoordenate[1]=2; break;}
+		case 4: 	{currentPosition[0][0]=endPoint; endCoordenate[0]=0; endCoordenate[1]=0; break;}
+		case 5: 	{currentPosition[0][1]=endPoint; endCoordenate[0]=0; endCoordenate[1]=1; break;}
+		case 6: 	{currentPosition[0][2]=endPoint; endCoordenate[0]=0; endCoordenate[1]=2; break;}
 	}
 }
 
@@ -641,21 +647,250 @@ void calculatePathVector(){
 	ttt=0;
 }
 
+void calculatePathVector2(){
+
+	float *moduleFoward,*moduleRight,*moduleLeft,*moduleDown, *minModulep;
+	float modules[4],minModule;
+
+	byte8 terminationConditon;
+	Nextcooredenate[0]=currentCoordenate[0];
+	Nextcooredenate[1]=currentCoordenate[1];
+
+	moduleFoward=&modules[0];
+	moduleRight=&modules[1];
+	moduleLeft=&modules[2];
+	moduleDown=&modules[3];
+
+	byte8 pointCoordenate[2]={0,0}; //y,x
+	struct pointAction *pAction;
+
+
+	int i;
+	int j;
+	int t;
+
+	int x;
+	int ttt;
+
+
+
+    	do{
+
+		pAction=getPossiPointActions(currentCoordenate);
+
+
+
+			modules[0]=1000;
+			modules[1]=1000;
+			modules[2]=1000;
+			modules[3]=1000;
+
+		for(j=0;j<4;j++){
+
+			switch (pAction->possibleActions[j]){
+
+				case moveFpward : {
+
+								float Y,X,Multiplication;
+										Y= endCoordenate[0]- (currentCoordenate[0]+1);
+										X= endCoordenate[1]- currentCoordenate[1];
+
+										Multiplication= (float)(X*X+Y*Y);
+
+								modules[0] =  sqrt(Multiplication) ;
+
+								break;
+
+							}
+
+				case right : {
+							float Y,X,Multiplication;
+									Y= endCoordenate[0]- (currentCoordenate[0] );
+									X= endCoordenate[1]- (currentCoordenate[1]+1);
+
+									Multiplication= (float)(X*X+Y*Y);
+
+							modules[1] =  sqrt(Multiplication) ;
+							break;
+							}
+				case left : {
+							float Y,X,Multiplication;
+									Y= endCoordenate[0]- (currentCoordenate[0] );
+									X= endCoordenate[1]- (currentCoordenate[1]-1);
+
+									Multiplication= (float)(X*X+Y*Y);
+
+							modules[2] =  sqrt(Multiplication) ;
+							break;
+
+							}
+				case MoveDown: {
+
+									float Y,X,Multiplication;
+											Y= endCoordenate[0]- (currentCoordenate[0]-1);
+											X= endCoordenate[1]- currentCoordenate[1];
+
+											Multiplication= (float)(X*X+Y*Y);
+
+									modules[3] =  sqrt(Multiplication) ;
+
+									break;
+
+								}
+				case noneAction :  break;
+				default : break;
+
+			}
+		}
+
+		minModule=1000;
+
+		for(t=0;t<4;t++){
+
+			if(minModule>modules[t] && modules[t]>=0){
+				minModule=modules[t];
+
+			}
+
+		}
+
+		if(minModule<1000){
+				if(minModule==(*moduleFoward)){
+					 Nextcooredenate[0]+=1;
+					 setRobotOrientaion(90);
+					 pAction=getPossiPointActions(Nextcooredenate);
+					 clearPossibleActions(pAction,MoveDown);
+					 EV3.lastxMov=moveFpward;
+					//actionList[actionListIndex++]=fwdMove;
+
+				}
+				else if(minModule==(*moduleRight)){
+
+					Nextcooredenate[1]+=1;
+					setRobotOrientaion(0);
+					pAction=getPossiPointActions(Nextcooredenate);
+					clearPossibleActions(pAction,left);
+					EV3.lastxMov=right;
+					//actionList[actionListIndex++]=rightMove;
+				}
+				else if(minModule==(*moduleLeft)){
+					Nextcooredenate[1]-=1;
+					setRobotOrientaion(180);
+					pAction=getPossiPointActions(Nextcooredenate);
+					clearPossibleActions(pAction,right);
+					EV3.lastxMov=left;
+					//actionList[actionListIndex++]=leftMove;
+				}
+				else if(minModule==(*moduleDown)){
+					Nextcooredenate[0]-=1;
+					setRobotOrientaion(270);
+					pAction=getPossiPointActions(Nextcooredenate);
+					clearPossibleActions(pAction,moveFpward);
+					EV3.lastxMov=MoveDown;
+					//actionList[actionListIndex++]=downMove;
+				}
+
+				//read sensor
+
+		}
+		else{
+
+			setPossibleInitActions();
+			if(EV3.lastxMov==moveFpward){
+					pAction=getPossiPointActions(currentCoordenate);
+					clearPossibleActions(pAction,moveFpward);
+			}
+			else if(EV3.lastxMov==right){
+
+					pAction=getPossiPointActions(currentCoordenate);
+					clearPossibleActions(pAction,right);
+
+
+			}
+			else if(EV3.lastxMov==left){
+
+					 pAction=getPossiPointActions(currentCoordenate);
+				     clearPossibleActions(pAction,left);
+
+
+			}
+			else if(EV3.lastxMov==MoveDown){
+					 pAction=getPossiPointActions(currentCoordenate);
+					clearPossibleActions(pAction,MoveDown);
+
+			}
+
+		}
+				if(getObstacle(Nextcooredenate)!=0){
+
+						setRobotOrientaion(360);
+						Nextcooredenate[0]=currentCoordenate[0];
+						Nextcooredenate[1]=currentCoordenate[1];
+
+						if(minModule==(*moduleFoward)){
+										 pAction=getPossiPointActions(currentCoordenate);
+										 clearPossibleActions(pAction,moveFpward);
+										 EV3.latsOrientation=270;
+						}
+						else if(minModule==(*moduleRight)){
+
+										 pAction=getPossiPointActions(currentCoordenate);
+										 clearPossibleActions(pAction,right);
+										 EV3.latsOrientation=180;
+
+									}
+						else if(minModule==(*moduleLeft)){
+
+										 pAction=getPossiPointActions(currentCoordenate);
+										 clearPossibleActions(pAction,left);
+										 EV3.latsOrientation=0;
+
+									}
+									else if(minModule==(*moduleDown)){
+										 pAction=getPossiPointActions(currentCoordenate);
+										clearPossibleActions(pAction,MoveDown);
+										EV3.latsOrientation=90;
+
+									}
+
+			}
+
+		 static int position=2;
+		 static int obstacles=2;
+		currentPosition[Nextcooredenate[0]][Nextcooredenate[1]]=position++;
+
+		lastCoordenate[0]=currentCoordenate[0];
+		lastCoordenate[1]=currentCoordenate[1];
+
+		 currentCoordenate[0]=Nextcooredenate[0];
+		 currentCoordenate[1]=Nextcooredenate[1];
+
+		ttt=0;
+
+		ttt=0;
+		ttt=0;
+			if((endCoordenate[0]==currentCoordenate[0])&&(endCoordenate[1]==currentCoordenate[1])) break;
+	}while(1);
+
+
+
+	ttt=0;
+}
 
 
 int main(void) {
-	EV3.latsOrientation=90;
-	EV3.orientation=90;
+	EV3.latsOrientation=270;
+	EV3.orientation=270;
 
 	lastCoordenate[0]=99;
 	lastCoordenate[1]=99;
 
 	setPossibleInitActions();
-	setStartPoint(3);
-	setEndPoint(3);
-	setObstacle(o6);
+	setStartPoint(4);
+	setEndPoint(4);
+	setObstacle(o4);
 	setObstacle(o5);
-	calculatePathVector();
+	calculatePathVector2();
 	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
 	return EXIT_SUCCESS;
 }
@@ -695,6 +930,14 @@ int main(void) {
 	setEndPoint(1); ok
 	setObstacle(04);
 	setObstacle(o5);
+
+
+	setStartPoint(6);
+	setEndPoint(6); ok
+	setObstacle(o6);
+	setObstacle(o5);
+
+
 
 
  * */
